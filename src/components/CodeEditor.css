@@ -1,0 +1,7 @@
+textarea {
+  height: 80%;
+  width: 40%;
+  resize: none;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+  font-size: 15px;
+}
