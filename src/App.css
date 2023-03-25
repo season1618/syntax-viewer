@@ -36,3 +36,30 @@
     transform: rotate(360deg);
   }
 }
+
+div#app {
+  height: 100%;
+  width: 100%;
+}
+
+nav {
+  display: flex;
+  height: 60px;
+  margin: 0;
+  background-color: black;
+}
+
+h2 {
+  margin-top: auto;
+  margin-bottom: auto;
+  margin-left: 20px;
+
+  font-weight: lighter;
+  color: white;
+}
+
+div#flex {
+  display: flex;
+  height: calc(100% - 60px);
+  width: 100%;
+}

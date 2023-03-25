@@ -77,8 +77,7 @@ function CodeEditor() {
   // }
 
   return (
-    <div>
-      <h1>Lisp Syntax Viewer</h1>
+    <div id="editor">
       <textarea
         value={code}
         onChange={(e) => { format(e.target.selectionStart, e.target.value);} }
