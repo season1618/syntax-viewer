@@ -1,14 +1,17 @@
 import './Canvas.css';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 function Canvas() {
-  const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
-  
   useEffect(
     () => {
       const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-      const ctx = canvas.getContext('2d');
-      setContext(ctx);
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+
+      const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+      context.beginPath();
+      context.arc(0, 0, 100, 0, 2 * Math.PI);
+      context.stroke();
     },
     []
   );
