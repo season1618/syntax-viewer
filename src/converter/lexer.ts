@@ -1,4 +1,4 @@
-export type Token = OpenPar | ClosePar | Ident | Num;
+export type Token = OpenPar | ClosePar | Ident;
 
 interface OpenPar {
   kind: 'openpar';
@@ -11,11 +11,6 @@ interface ClosePar {
 interface Ident {
   kind: 'ident';
   ident: string;
-}
-
-interface Num {
-  kind: 'num';
-  value: string;
 }
 
 function tokenize(code: string): Token[] {
@@ -36,18 +31,10 @@ function tokenize(code: string): Token[] {
       tokenList.push({ kind: 'closepar' });
       continue;
     }
-    if (isNumeric(code[i])) {
-      let val = '';
-      while (i < code.length && isNumeric(code[i])) {
-        val += code[i];
-        i++;
-      }
-      tokenList.push({ kind: 'num', value: val });
-      continue;
-    }
     let ident = '';
-    while (i < code.length && (isIdent(code[i]) || isNumeric(code[i]))) {
-      ident.concat(code[i]);
+    while (i < code.length) {
+      if (isWhitespace(code[i]) || code[i] === '(' || code[i] === ')') break;
+      ident = ident.concat(code[i]);
       i++;
     }
     tokenList.push({ kind: 'ident', ident: ident });
@@ -57,35 +44,6 @@ function tokenize(code: string): Token[] {
 
 function isWhitespace(str: string): boolean {
   return [' ', '\n', '\t', '\v', '\f', '\r'].includes(str);
-}
-
-function isNumeric(str: string): boolean {
-  return ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].includes(str);
-}
-
-function isIdent(str: string): boolean {
-  return /^[a-zA-Z]/.test(str) || ['|', '&', '!', '=', '<', '>', '+', '-', '*', '/', '%'].includes(str);
-}
-
-function convertStringToNum(str: string): Option<number> {
-  const digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
-  for (let i = 0; i < 10; i++) {
-    if (digits[i] === str) {
-      return { kind: "some", value: i };
-    }
-  }
-  return { kind: "none" };
-}
-
-export type Option<T> = None | Some<T>;
-
-interface None {
-  kind: 'none';
-}
-
-interface Some<T> {
-  kind: 'some';
-  value: T;
 }
 
 export { tokenize };
