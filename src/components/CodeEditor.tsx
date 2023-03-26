@@ -1,38 +1,14 @@
 import './CodeEditor.css';
-import { useState, useEffect } from 'react';
-
-type Token = OpenPar | ClosePar | Ident | Number;
-
-interface OpenPar {
-  kind: 'openpar';
-}
-
-interface ClosePar {
-  kind: 'closepar';
-}
-
-interface Ident {
-  kind: 'ident';
-  ident: string;
-}
-
-interface Number {
-  kind: "number";
-  value: number;
-}
+import { useState, useEffect, useContext } from 'react';
+import { TreeContext } from '../App';
+import { convert } from '../converter/main';
 
 function CodeEditor() {
   const [code, setCode] = useState('');
   const [cursorPos, setCursorPos] = useState(-1);
+  const [tree, setTree] = useContext(TreeContext);
   const indent = 4;
   const target = document.querySelector('textarea') as HTMLTextAreaElement;
-
-  // function push() {
-  //   if (task !== '') {
-  //     setTaskList(taskList.concat([task]));
-  //     setTask('');
-  //   }
-  // }
 
   useEffect(
     () => {
@@ -42,6 +18,16 @@ function CodeEditor() {
     },
     [target, code, cursorPos]
   );
+
+  useEffect(
+    () => {
+      const nextTree = convert(code);
+      if (nextTree !== undefined) {
+        setTree(nextTree);
+      }
+    },
+    [code]
+  )
 
   function format(pos: number, nextCode: string) {
     pos -= 1;
@@ -69,19 +55,24 @@ function CodeEditor() {
     setCursorPos(pos + indent);
   }
 
-  // function tokenize(code: string): Token[] {
-  //   let i = 0;
-  //   while (i < code.length) {
-  //     if 
-  //   }
-  // }
-
   return (
     <div id="editor">
       <textarea
         value={code}
-        onChange={(e) => { format(e.target.selectionStart, e.target.value);} }
-        onKeyDown={(e) => { if (e.key === 'Tab') { e.preventDefault(); const target = e.target as HTMLTextAreaElement; formatTab(target.selectionStart);}}}
+        onChange={
+          (e) => {
+            format(e.target.selectionStart, e.target.value);
+          }
+        }
+        onKeyDown={
+          (e) => {
+            if (e.key === 'Tab') {
+              e.preventDefault();
+              const target = e.target as HTMLTextAreaElement;
+              formatTab(target.selectionStart);
+            }
+          }
+        }
       />
     </div>
   );

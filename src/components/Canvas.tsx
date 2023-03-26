@@ -1,7 +1,9 @@
 import './Canvas.css';
-import { useState, useEffect, useRef } from 'react';
+import { useEffect, useContext } from 'react';
+import { TreeContext } from '../App';
 
 function Canvas() {
+  const [tree, setTree] = useContext(TreeContext);
   useEffect(
     () => {
       const canvas = document.querySelector('canvas') as HTMLCanvasElement;
@@ -15,6 +17,15 @@ function Canvas() {
     },
     []
   );
+
+  useEffect(
+    () => {
+      const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+      const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+      context.clearRect(0, 0, canvas.width, canvas.height);
+    },
+    [tree]
+  )
 
   return (
     <canvas></canvas>
