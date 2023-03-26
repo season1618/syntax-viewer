@@ -8,16 +8,21 @@ function CodeEditor() {
   const [cursorPos, setCursorPos] = useState(-1);
   const [tree, setTree] = useContext(TreeContext);
   const indent = 4;
-  const target = document.querySelector('textarea') as HTMLTextAreaElement;
+  let target: HTMLTextAreaElement;
 
   useEffect(
     () => {
-      if (cursorPos === -1) return;
+      target = document.querySelector('textarea') as HTMLTextAreaElement;
+    }
+  );
+
+  useEffect(
+    () => {
       target.focus();
       target.setSelectionRange(cursorPos, cursorPos);
     },
-    [target, code, cursorPos]
-  );
+    [cursorPos]
+  )
 
   useEffect(
     () => {
@@ -32,19 +37,19 @@ function CodeEditor() {
   function format(pos: number, nextCode: string) {
     pos -= 1;
     if (code.length < nextCode.length) {
-      if (nextCode[pos] === '(' && pos === nextCode.length - 1) {
-        nextCode = nextCode.concat(')');
-      }
-
-      if (nextCode[pos] === '\'' && nextCode[pos-1] !== '\'' && nextCode[pos+1] !== '\'') {
-        nextCode = nextCode.substring(0, pos) + '\'' + nextCode.substring(pos, nextCode.length);
-      }
-
-      if (nextCode[pos] === '\t') {
-        nextCode = nextCode.replace('\t', ' '.repeat(indent));
+      switch (nextCode[pos]) {
+        case '(':
+          nextCode = nextCode.substring(0, pos + 1) + ')' + nextCode.substring(pos + 1, nextCode.length);
+          break;
+        case ')':
+          if (pos + 1 < nextCode.length && nextCode[pos + 1] === ')') nextCode = code;
+          break;
+        case '\'':
+          if (pos + 1 < nextCode.length && nextCode[pos + 1] === '\'') nextCode = code;
+          else nextCode = nextCode.substring(0, pos + 1) + '\'' + nextCode.substring(pos + 1, nextCode.length);
+          break;
       }
     }
-
     setCode(nextCode);
     setCursorPos(pos + 1);
   }
