@@ -4,7 +4,7 @@ import { TreeContext } from '../App';
 import { convert } from '../converter/main';
 
 function CodeEditor() {
-  const [code, setCode] = useState('');
+  const [code, setCode] = useState('(- (+ -1 2 3 (/ (* 4 5 6 7) 8)) 9)');
   const [cursorPos, setCursorPos] = useState(-1);
   const [tree, setTree] = useContext(TreeContext);
   const indent = 4;
