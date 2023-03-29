@@ -4,8 +4,7 @@ import CodeEditor from './components/CodeEditor';
 import Canvas from './components/Canvas';
 import { Expr } from './converter/parser';
 
-// export const TreeContext = createContext<Expr>({ kind: 'prim', value: '' });
-const initExpr: Expr = { kind: 'prim', value: '' };
+const initExpr: Expr = { kind: 'prim', depth: 0, offset: 0, label: '' };
 export const TreeContext = createContext<[Expr, (expr: Expr) => void]>([initExpr, (expr: Expr) => {}])
 
 function App() {
