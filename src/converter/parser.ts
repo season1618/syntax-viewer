@@ -53,20 +53,14 @@ class OffsetTable {
     this.table = {};
   }
 
-  nodeOffset(depth: number, offset: number): number {
+  nodeOffset(depth: number, offset: number = -1): number {
     if (!(depth in this.table)) {
       this.table[depth] = new Set();
     }
-    for (let i = 0; ; i++) {
-      if (!this.table[depth].has(offset + i)) {
-        this.table[depth].add(offset + i);
-        return offset + i;
-      }
-      if (!this.table[depth].has(offset - i)) {
-        this.table[depth].add(offset - i);
-        return offset - i;
-      }
-    }
+    let maxOffset = Math.max(-1, ...this.table[depth]);
+    let finOffset = Math.max(maxOffset + 1, offset);
+    this.table[depth].add(finOffset);
+    return finOffset;
   }
 
   leafOffset(depth: number): number {
@@ -141,7 +135,8 @@ function parse(tokenList: Token[]): Expr | undefined {
         let offset;
         if (args.length === 0) offset = offsetTable.leafOffset(d);
         else offset = offsetTable.nodeOffset(d, args.map((arg) => arg.offset).reduce((sum, val) => sum + val, 0) / args.length);
-        
+        // else offset = offsetTable.leafOffset(d);
+
         return { kind: 'call', depth: d, offset, label, args };
       case 'closepar':
         i++;
