@@ -4,7 +4,7 @@ import { AstContext } from '../App';
 import { convert } from '../converter/main';
 
 function CodeEditor() {
-  const [code, setCode] = useState('(- (+ -1 2 3 (/ (* 4 5 6 7) 8)) 9)');
+  const [code, setCode] = useState('(- (+ (- 1) 2 3 (/ (* 4 5 6 7) 8)) 9)');
   const [cursorPos, setCursorPos] = useState(-1);
   const [ast, setAST] = useContext(AstContext);
   const indent = 4;
