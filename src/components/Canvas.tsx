@@ -57,11 +57,7 @@ function Canvas() {
       for (const symbol of symbolTable.table) {
         let x = width * symbol.offset;
         let y = height * symbol.depth;
-
-        context.beginPath();
-        context.arc(x, y, r, 0, 2 * Math.PI);
-        context.stroke();
-        context.fillText(symbol.name, x, y);
+        drawNode(x, y, symbol.name);
 
         draw(symbol.value);
 
@@ -77,16 +73,18 @@ function Canvas() {
       }
 
       function draw(expr: Expr) {
-        let x = width * expr.getOffset();
-        let y = height * expr.getDepth();
-        
-        context.beginPath();
-        context.arc(x, y, r, 0, 2 * Math.PI);
-        context.stroke();
-        context.fillText(expr.label, x, y);
-
         switch (expr.kind) {
-          case 'call':
+          case 'prim':{
+            let x = width * expr.getOffset();
+            let y = height * expr.getDepth();
+            drawNode(x, y, expr.label);
+            break;
+          }
+          case 'call':{
+            let x = width * expr.getOffset();
+            let y = height * expr.getDepth();
+            drawNode(x, y, expr.label);
+
             let num = expr.args.length;
             expr.args.forEach((child, index) => {
               draw(child);
@@ -98,7 +96,15 @@ function Canvas() {
               drawArrow(x1, y1, x2, y2);
             });
             break;
+          }
         }
+      }
+
+      function drawNode(x: number, y: number, label: string) {
+        context.beginPath();
+        context.arc(x, y, r, 0, 2 * Math.PI);
+        context.stroke();
+        context.fillText(label, x, y);
       }
 
       function drawArrow(x1: number, y1: number, x2: number, y2: number) {
