@@ -1,7 +1,7 @@
 import { tokenize } from './lexer';
-import { Expr, parse } from './parser';
+import { AST, parse } from './parser';
 
-function convert(code: string): Expr | undefined {
+function convert(code: string): AST {
   return parse(tokenize(code));
 }
 

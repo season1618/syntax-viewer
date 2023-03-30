@@ -1,13 +1,13 @@
 import './Canvas.css';
 import { Expr } from '../converter/parser';
 import { useState, useEffect, useContext } from 'react';
-import { TreeContext } from '../App';
+import { AstContext } from '../App';
 
 function Canvas() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
-  const [tree, setTree] = useContext(TreeContext);
+  const [ast, setAST] = useContext(AstContext);
 
   function updateMousePos(x: number, y: number) {
     setMousePos({ x, y });
@@ -51,10 +51,32 @@ function Canvas() {
       const height = 120;
       const r = 24; // radius of node
       const s = 3; // scale of triangle
-      
-      drawNode(tree);
 
-      function drawNode(expr: Expr) {
+      const [root, symbolTable] = ast;
+
+      for (const symbol of symbolTable.table) {
+        let x = width * symbol.offset;
+        let y = height * symbol.depth;
+
+        context.beginPath();
+        context.arc(x, y, r, 0, 2 * Math.PI);
+        context.stroke();
+        context.fillText(symbol.name, x, y);
+
+        draw(symbol.value);
+
+        let x1 = x;
+        let y1 = y + r;
+        let x2 = width * symbol.value.getOffset();
+        let y2 = height * symbol.value.getDepth() - r;
+        drawArrow(x1, y1, x2, y2);
+      }
+      
+      if (root !== undefined){
+        draw(root);
+      }
+
+      function draw(expr: Expr) {
         let x = width * expr.getOffset();
         let y = height * expr.getDepth();
         
@@ -67,7 +89,7 @@ function Canvas() {
           case 'call':
             let num = expr.args.length;
             expr.args.forEach((child, index) => {
-              drawNode(child);
+              draw(child);
 
               let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
               let y1 = y + r;
@@ -75,15 +97,6 @@ function Canvas() {
               let y2 = height * child.getDepth() - r;
               drawArrow(x1, y1, x2, y2);
             });
-            break;
-          case 'var':
-            drawNode(expr.getValue());
-
-            let x1 = x;
-            let y1 = y + r;
-            let x2 = width * expr.getValue().getOffset();
-            let y2 = height * expr.getValue().getDepth() - r;
-            drawArrow(x1, y1, x2, y2);
             break;
         }
       }
@@ -101,7 +114,7 @@ function Canvas() {
         context.stroke();
       }
     },
-    [origin, logScale, tree]
+    [origin, logScale, ast]
   );
 
   return (

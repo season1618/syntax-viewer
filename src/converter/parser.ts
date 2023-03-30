@@ -3,6 +3,7 @@ import { Token } from './lexer';
 let symbolTable: SymbolTable;
 let offsetTable: OffsetTable;
 
+export type AST = [Expr | undefined, SymbolTable];
 export type Expr = Call | Prim | Var;
 
 class Call {
@@ -154,6 +155,15 @@ class SymbolTable {
       }
     }
   }
+
+  setOffset() {
+    for (const symbol of this.table) {
+      if (symbol.offset === -1) {
+        symbol.value.setOffset();
+        symbol.offset = offsetTable.calcOffset(symbol.depth, symbol.value.getOffset());
+      }
+    }
+  }
 }
 
 class OffsetTable {
@@ -174,7 +184,7 @@ class OffsetTable {
   }
 }
 
-function parse(tokenList: Token[]): Expr | undefined {
+function parse(tokenList: Token[]): AST {
   let root;
   symbolTable = new SymbolTable();
   offsetTable = new OffsetTable();
@@ -188,7 +198,7 @@ function parse(tokenList: Token[]): Expr | undefined {
           symbolTable.push(name, expr);
           consume(')');
         } else {
-          return undefined;
+          return [undefined, symbolTable];
         }
         continue;
       }
@@ -198,10 +208,11 @@ function parse(tokenList: Token[]): Expr | undefined {
     break;
   }
 
-  if (root === undefined) return undefined;
-
-  root.setOffset();
-  return root;
+  if (root !== undefined) {
+    root.setOffset();
+  }
+  symbolTable.setOffset();
+  return [root, symbolTable];
 
   function parse_ident(): string | undefined {
     if (i < tokenList.length) {
@@ -310,4 +321,4 @@ function parse(tokenList: Token[]): Expr | undefined {
   }
 }
 
-export { parse };
+export { SymbolTable, parse };
