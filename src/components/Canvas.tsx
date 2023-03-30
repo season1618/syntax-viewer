@@ -4,12 +4,16 @@ import { useState, useEffect, useContext } from 'react';
 import { AstContext } from '../App';
 
 function Canvas() {
+  const [mousePressed, setMousePressed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
   const [ast, setAST] = useContext(AstContext);
 
   function updateMousePos(x: number, y: number) {
+    if (mousePressed) {
+      setOrigin({ x: origin.x + x - mousePos.x, y: origin.y + y - mousePos.y });
+    }
     setMousePos({ x, y });
   }
 
@@ -125,6 +129,8 @@ function Canvas() {
 
   return (
     <canvas
+      onMouseDown={(e) => setMousePressed(true)}
+      onMouseUp={(e) => setMousePressed(false)}
       onMouseMove={
         (e) => {
           let target = e.currentTarget.getBoundingClientRect();
