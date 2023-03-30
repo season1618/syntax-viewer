@@ -24,6 +24,13 @@ class Call {
     return this.depth;
   }
 
+  updateDepth(depth: number) {
+    this.depth = Math.max(this.depth, depth);
+    for (const child of this.args) {
+      child.updateDepth(depth + 1);
+    }
+  }
+
   getOffset(): number {
     return this.offset;
   }
@@ -33,10 +40,10 @@ class Call {
       child.setOffset();
     }
     if (this.args.length === 0) {
-      this.offset = offsetTable.leafOffset(this.depth);
+      this.offset = offsetTable.calcOffset(this.depth);
     } else {
       let avgOffset = this.args.map((arg) => arg.getOffset()).reduce((sum, val) => sum + val, 0) / this.args.length;
-      this.offset = offsetTable.nodeOffset(this.depth, avgOffset);
+      this.offset = offsetTable.calcOffset(this.depth, avgOffset);
     }
   }
 }
@@ -58,12 +65,16 @@ export class Prim {
     return this.depth;
   }
 
+  updateDepth(depth: number) {
+    this.depth = Math.max(this.depth, depth);
+  }
+
   getOffset(): number {
     return this.offset;
   }
 
   setOffset() {
-    this.offset = offsetTable.leafOffset(this.depth);
+    this.offset = offsetTable.calcOffset(this.depth);
   }
 }
 
@@ -83,6 +94,10 @@ class Var {
     return symbol.depth;
   }
 
+  updateDepth(depth: number) {
+    symbolTable.updateDepth(this.label, depth);
+  }
+
   getOffset(): number {
     let symbol = symbolTable.table[this.id];
     return symbol.offset;
@@ -92,7 +107,7 @@ class Var {
     let symbol = symbolTable.table[this.id];
     if (symbol.offset === -1) {
       symbol.value.setOffset();
-      symbol.offset = offsetTable.nodeOffset(symbol.depth, symbol.value.getOffset());
+      symbol.offset = offsetTable.calcOffset(symbol.depth, symbol.value.getOffset());
     }
   }
 
@@ -131,28 +146,12 @@ class SymbolTable {
     return -1;
   }
 
-  updateVarDepth(name: string, depth: number) {
+  updateDepth(name: string, depth: number) {
     for (const symbol of this.table) {
       if (symbol.name === name) {
         symbol.depth = Math.max(symbol.depth, depth);
-        this.updateDepth(symbol.value, depth + 1);
+        symbol.value.updateDepth(depth + 1);
       }
-    }
-  }
-
-  updateDepth(expr: Expr, depth: number) {
-    switch (expr.kind) {
-      case 'call':
-        expr.depth = Math.max(expr.depth, depth);
-        for (const child of expr.args) this.updateDepth(child, depth + 1);
-        break;
-      case 'var':
-        this.updateVarDepth(expr.label, depth);
-        break;
-      case 'prim':
-        expr.depth = Math.max(expr.depth, depth);
-        expr.depth = Math.max(expr.depth, depth);
-        break;
     }
   }
 }
@@ -164,7 +163,7 @@ class OffsetTable {
     this.table = {};
   }
 
-  nodeOffset(depth: number, offset: number = -1): number {
+  calcOffset(depth: number, offset: number = -1): number {
     if (!(depth in this.table)) {
       this.table[depth] = new Set();
     }
@@ -172,15 +171,6 @@ class OffsetTable {
     let finOffset = Math.max(maxOffset + 1, offset);
     this.table[depth].add(finOffset);
     return finOffset;
-  }
-
-  leafOffset(depth: number): number {
-    if (!(depth in this.table)) {
-      this.table[depth] = new Set();
-    }
-    let maxOffset = Math.max(-1, ...this.table[depth]);
-    this.table[depth].add(maxOffset + 1);
-    return maxOffset + 1;
   }
 }
 
@@ -255,7 +245,7 @@ function parse(tokenList: Token[]): Expr | undefined {
         const symbol = symbolTable.find(token.ident);
         if (symbol === undefined) return new Prim(depth, token.ident);
         else {
-          symbolTable.updateVarDepth(token.ident, depth);
+          symbolTable.updateDepth(token.ident, depth);
           return new Var(token.ident);
         }
     }
