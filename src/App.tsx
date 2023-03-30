@@ -2,7 +2,7 @@ import './App.css';
 import { useState, createContext } from 'react';
 import CodeEditor from './components/CodeEditor';
 import Canvas from './components/Canvas';
-import { AST, Expr, Prim, SymbolTable } from './converter/parser';
+import { AST, SymbolTable } from './converter/parser';
 
 const initAST: AST = [undefined, new SymbolTable()];
 export const AstContext = createContext<[AST, (ast: AST) => void]>([initAST, (ast: AST) => {}])
