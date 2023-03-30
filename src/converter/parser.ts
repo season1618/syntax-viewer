@@ -197,10 +197,11 @@ function parse(tokenList: Token[]): AST {
         if (name !== undefined && expr !== undefined) {
           symbolTable.push(name, expr);
           consume(')');
+          continue;
         } else {
-          return [undefined, symbolTable];
+          root = undefined;
+          break;
         }
-        continue;
       }
       i--;
     }
@@ -212,6 +213,7 @@ function parse(tokenList: Token[]): AST {
     root.setOffset();
   }
   symbolTable.setOffset();
+  
   return [root, symbolTable];
 
   function parse_ident(): string | undefined {

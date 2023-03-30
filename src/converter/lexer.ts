@@ -38,7 +38,7 @@ function tokenize(code: string): Token[] {
       i++;
     }
     tokenList.push({ kind: 'ident', ident: ident });
-  }console.log(tokenList);
+  }
   return tokenList;
 }
 
