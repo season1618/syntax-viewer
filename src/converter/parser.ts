@@ -1,48 +1,159 @@
 import { Token } from './lexer';
 
-export type Expr = Call | Var | Prim;
+let symbolTable: SymbolTable;
+let offsetTable: OffsetTable;
 
-interface Call {
+export type Expr = Call | Prim | Var;
+
+class Call {
   kind: 'call';
   depth: number;
   offset: number;
   label: string;
   args: Expr[];
+
+  constructor(depth: number, label: string, args: Expr[]) {
+    this.kind = 'call';
+    this.depth = depth;
+    this.offset = -1;
+    this.label = label;
+    this.args = args;
+  }
+
+  getDepth(): number {
+    return this.depth;
+  }
+
+  getOffset(): number {
+    return this.offset;
+  }
+
+  setOffset() {
+    for (const child of this.args) {
+      child.setOffset();
+    }
+    if (this.args.length === 0) {
+      this.offset = offsetTable.leafOffset(this.depth);
+    } else {
+      let avgOffset = this.args.map((arg) => arg.getOffset()).reduce((sum, val) => sum + val, 0) / this.args.length;
+      this.offset = offsetTable.nodeOffset(this.depth, avgOffset);
+    }
+  }
 }
 
-interface Var {
-  kind: 'var';
-  depth: number;
-  offset: number;
-  label: string;
-  expr: Expr;
-}
-
-interface Prim {
+export class Prim {
   kind: 'prim';
   depth: number;
   offset: number;
   label: string;
+
+  constructor(depth: number, label: string) {
+    this.kind = 'prim';
+    this.depth = depth;
+    this.offset = -1;
+    this.label = label;
+  }
+
+  getDepth(): number {
+    return this.depth;
+  }
+
+  getOffset(): number {
+    return this.offset;
+  }
+
+  setOffset() {
+    this.offset = offsetTable.leafOffset(this.depth);
+  }
+}
+
+class Var {
+  kind: 'var';
+  label: string;
+  id: number;
+
+  constructor(label: string) {
+    this.kind = 'var';
+    this.label = label;
+    this.id = symbolTable.getId(label);
+  }
+
+  getDepth(): number {
+    let symbol = symbolTable.table[this.id];
+    return symbol.depth;
+  }
+
+  getOffset(): number {
+    let symbol = symbolTable.table[this.id];
+    return symbol.offset;
+  }
+
+  setOffset() {
+    let symbol = symbolTable.table[this.id];
+    if (symbol.offset === -1) {
+      symbol.value.setOffset();
+      symbol.offset = offsetTable.nodeOffset(symbol.depth, symbol.value.getOffset());
+    }
+  }
+
+  getValue(): Expr {
+    return symbolTable.table[this.id].value;
+  }
 }
 
 class SymbolTable {
-  table: { name: string; expr: Expr; }[];
+  table: { name: string; depth: number; offset: number; value: Expr; }[];
 
   constructor() {
     this.table = [];
   }
 
-  push(name: string, expr: Expr) {
-    this.table.push({ name, expr });
+  push(name: string, value: Expr) {
+    this.table.push({ name, depth: -1, offset: -1, value });
   }
 
   find(name: string): Expr | undefined {
     for (const symbol of this.table) {
       if (symbol.name === name) {
-        return symbol.expr;
+        return symbol.value;
       }
     }
     return undefined;
+  }
+
+  getId(name: string): number {
+    for (let index = 0; index < this.table.length; index++) {
+      let symbol = this.table[index];
+      if (symbol.name === name) {
+        return index;
+      }
+    }
+    return -1;
+  }
+
+  updateVarDepth(name: string, depth: number) {
+    for (const symbol of this.table) {
+      if (symbol.name === name) {
+        symbol.depth = Math.max(symbol.depth, depth);
+        this.updateDepth(symbol.value, depth + 1);
+      }
+    }
+  }
+
+  updateDepth(expr: Expr, depth: number) {
+    switch (expr.kind) {
+      case 'call':
+        expr.depth = Math.max(expr.depth, depth);
+        for (const child of expr.args) this.updateDepth(child, depth + 1);
+        break;
+      case 'var':
+        this.updateVarDepth(expr.label, depth);
+        break;
+      case 'prim':
+        expr.depth = Math.max(expr.depth, depth);
+        expr.depth = Math.max(expr.depth, depth);
+        break;
+    }
   }
 }
 
@@ -74,17 +185,17 @@ class OffsetTable {
 }
 
 function parse(tokenList: Token[]): Expr | undefined {
-  let st = new SymbolTable();
-  let offsetTable = new OffsetTable();
+  let root;
+  symbolTable = new SymbolTable();
+  offsetTable = new OffsetTable();
   let i = 0;
   while (i < tokenList.length) {
     if (expect('(')) {
       if (expect('define')) {
         let name = parse_ident();
         let expr = parse_expr(0);
-        console.log(name, expr);
         if (name !== undefined && expr !== undefined) {
-          st.push(name, expr);
+          symbolTable.push(name, expr);
           consume(')');
         } else {
           return undefined;
@@ -93,11 +204,14 @@ function parse(tokenList: Token[]): Expr | undefined {
       }
       i--;
     }
-    let expr = parse_expr(0);
-    console.log(expr);
-    return expr;
-    // return parse_expr();
+    root = parse_expr(0);
+    break;
   }
+
+  if (root === undefined) return undefined;
+
+  root.setOffset();
+  return root;
 
   function parse_ident(): string | undefined {
     if (i < tokenList.length) {
@@ -110,7 +224,7 @@ function parse(tokenList: Token[]): Expr | undefined {
     return undefined;
   }
 
-  function parse_expr(d: number): Expr | undefined {
+  function parse_expr(depth: number): Expr | undefined {
     if (i >= tokenList.length) {
       return undefined;
     }
@@ -127,25 +241,23 @@ function parse(tokenList: Token[]): Expr | undefined {
         
         let args: Expr[] = [];
         while (!expect(')')) {
-          let arg = parse_expr(d + 1);
+          let arg = parse_expr(depth + 1);
           if (arg !== undefined) args.push(arg);
           else return undefined;
         }
 
-        let offset;
-        if (args.length === 0) offset = offsetTable.leafOffset(d);
-        else offset = offsetTable.nodeOffset(d, args.map((arg) => arg.offset).reduce((sum, val) => sum + val, 0) / args.length);
-        // else offset = offsetTable.leafOffset(d);
-
-        return { kind: 'call', depth: d, offset, label, args };
+        return new Call(depth, label, args);
       case 'closepar':
         i++;
         return undefined;
       case 'ident':
         i++;
-        const symbol = st.find(token.ident);
-        if (symbol === undefined) return { kind: 'prim', depth: d, offset: offsetTable.leafOffset(d), label: token.ident };
-        else return { kind: 'var', depth: d, offset: symbol.offset, label: token.ident, expr: symbol };
+        const symbol = symbolTable.find(token.ident);
+        if (symbol === undefined) return new Prim(depth, token.ident);
+        else {
+          symbolTable.updateVarDepth(token.ident, depth);
+          return new Var(token.ident);
+        }
     }
   }
 

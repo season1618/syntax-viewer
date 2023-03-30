@@ -2,9 +2,9 @@ import './App.css';
 import { useState, createContext } from 'react';
 import CodeEditor from './components/CodeEditor';
 import Canvas from './components/Canvas';
-import { Expr } from './converter/parser';
+import { Expr, Prim } from './converter/parser';
 
-const initExpr: Expr = { kind: 'prim', depth: 0, offset: 0, label: '' };
+const initExpr: Expr = new Prim(-1, '');
 export const TreeContext = createContext<[Expr, (expr: Expr) => void]>([initExpr, (expr: Expr) => {}])
 
 function App() {

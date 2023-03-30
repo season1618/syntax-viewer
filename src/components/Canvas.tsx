@@ -16,7 +16,6 @@ function Canvas() {
   function updateScale(delta: number) {
     let nextX = mousePos.x + Math.pow(1.1, delta/100) * (origin.x - mousePos.x);
     let nextY = mousePos.y + Math.pow(1.1, delta/100) * (origin.y - mousePos.y);
-    console.log(mousePos, nextX, nextY, origin.x, origin.y);
     let nextLogScale = logScale + delta / 100;
     if (-50 < nextLogScale && nextLogScale < 50) {
       setOrigin({ x: nextX, y: nextY });
@@ -47,18 +46,17 @@ function Canvas() {
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.translate(origin.x, origin.y);
       context.scale(Math.pow(1.1, logScale), Math.pow(1.1, logScale));
-      
 
       const width = 80;
       const height = 120;
       const r = 24; // radius of node
       const s = 3; // scale of triangle
       
-      draw(tree);
+      drawNode(tree);
 
-      function draw(expr: Expr) {
-        let x = width * expr.offset;
-        let y = height * expr.depth;
+      function drawNode(expr: Expr) {
+        let x = width * expr.getOffset();
+        let y = height * expr.getDepth();
         
         context.beginPath();
         context.arc(x, y, r, 0, 2 * Math.PI);
@@ -69,26 +67,38 @@ function Canvas() {
           case 'call':
             let num = expr.args.length;
             expr.args.forEach((child, index) => {
-              draw(child);
+              drawNode(child);
 
-              let x1 = width * expr.offset + (index + 1) / (num + 1) * 2 * r - r;
-              let y1 = height * expr.depth + r;
-              let x2 = width * child.offset;
-              let y2 = height * child.depth - r;
-
-              context.beginPath();
-
-              context.moveTo(x1, y1);
-              context.lineTo(x1 - s, y1 + Math.sqrt(3) * s);
-              context.lineTo(x1 + s, y1 + Math.sqrt(3) * s);
-              context.closePath();
-              context.fill();
-
-              context.bezierCurveTo(x1, (y1 + y2) / 2, x2, (y1 + y2) / 2, x2, y2);
-              context.stroke();
+              let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
+              let y1 = y + r;
+              let x2 = width * child.getOffset();
+              let y2 = height * child.getDepth() - r;
+              drawArrow(x1, y1, x2, y2);
             });
             break;
+          case 'var':
+            drawNode(expr.getValue());
+
+            let x1 = x;
+            let y1 = y + r;
+            let x2 = width * expr.getValue().getOffset();
+            let y2 = height * expr.getValue().getDepth() - r;
+            drawArrow(x1, y1, x2, y2);
+            break;
         }
+      }
+
+      function drawArrow(x1: number, y1: number, x2: number, y2: number) {
+        context.beginPath();
+
+        context.moveTo(x1, y1);
+        context.lineTo(x1 - s, y1 + Math.sqrt(3) * s);
+        context.lineTo(x1 + s, y1 + Math.sqrt(3) * s);
+        context.closePath();
+        context.fill();
+
+        context.bezierCurveTo(x1, (y1 + y2) / 2, x2, (y1 + y2) / 2, x2, y2);
+        context.stroke();
       }
     },
     [origin, logScale, tree]
