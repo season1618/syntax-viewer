@@ -18,6 +18,30 @@ class OffsetTable {
   }
 }
 
+const inf = 1e9;
+
+function minArray(a: number[], b: number[]): number[] {
+  if (a.length > b.length) {
+    [a, b] = [b, a];
+  }
+
+  let res = [];
+  for (let i = 0; i < a.length; i++) res.push(Math.min(a[i], b[i]));
+  for (let i = a.length; i < b.length; i++) res.push(b[i]);
+  return res;
+}
+
+function maxArray(a: number[], b: number[]): number[] {
+  if (a.length > b.length) {
+    [a, b] = [b, a];
+  }
+
+  let res = [];
+  for (let i = 0; i < a.length; i++) res.push(Math.max(a[i], b[i]));
+  for (let i = a.length; i < b.length; i++) res.push(b[i]);
+  return res;
+}
+
 class Node {
   offset: number;
   depth: number;
@@ -32,6 +56,53 @@ class Node {
     this.childs = childs;
     this.belows = belows;
   }
+
+  calcOffset() {
+    for (const below of this.belows) {
+      below.calcOffset();
+    }
+    for (let i = 1; i < this.belows.length; i++) {
+      let treeLeft = this.belows[i-1];
+      let treeRight = this.belows[i];
+
+      let diff = [];
+      let contRight = treeLeft.contourRight();
+      let contLeft = treeRight.contourLeft();
+      for (let i = 0; i < Math.min(contLeft.length, contRight.length); i++) {
+        diff.push(1 + contRight[i] - contLeft[i]);
+      }
+      
+      let shift = diff.reduce((max, v) => Math.max(max, v), 0);
+      treeRight.move(shift);
+    }
+
+    if (this.belows.length == 0) {
+      this.offset = 0;
+    } else {
+      this.offset = this.belows.map(below => below.offset).reduce((sum, v) => sum + v, 0) / this.belows.length;
+    }
+  }
+
+  contourLeft(): number[] {
+    const contourBelow = this.belows
+      .map(below => below.contourLeft())
+      .reduce(minArray, [])
+    return [this.offset, ...contourBelow];
+  }
+
+  contourRight(): number[] {
+    const contourBelow = this.belows
+      .map(below => below.contourRight())
+      .reduce(maxArray, [])
+    return [this.offset, ...contourBelow];
+  }
+
+  move(shift: number) {
+    this.offset += shift;
+    for (const below of this.belows) {
+      below.move(shift);
+    }
+  }
 }
 
 function layout(ast: Ast, offsetTable: OffsetTable = new OffsetTable()): Node {
@@ -40,28 +111,11 @@ function layout(ast: Ast, offsetTable: OffsetTable = new OffsetTable()): Node {
   let depth = ast.getDepth();
   let childs: Node[] = [];
   let belows: Node[] = [];
-  switch (ast.kind) {
-    case 'call': {
-      for (const arg of ast.args) {
-        const node = layout(arg, offsetTable);
-        childs.push(node);
-        if (depth + 1 == node.depth) belows.push(node);
-      }
-      if (childs.length === 0) {
-        offset = offsetTable.calcOffset(ast.depth);
-      } else {
-        let avgOffset = childs.map((child) => child.offset).reduce((sum, val) => sum + val, 0) / ast.args.length;
-        offset = offsetTable.calcOffset(ast.depth, avgOffset);
-        console.log(avgOffset, offset);
-      }
-      break;
-    }
-    case 'prim': {
-      offset = offsetTable.calcOffset(ast.depth);
-      break;
-    }
-    case 'var': {
-      break;
+  if (ast.kind == 'call') {
+    for (const arg of ast.args) {
+      const node = layout(arg, offsetTable);
+      childs.push(node);
+      if (depth + 1 == node.depth) belows.push(node);
     }
   }
   

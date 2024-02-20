@@ -3,9 +3,11 @@ import { Ast, parse } from './parser';
 import { Node, layout } from './layout';
 
 function convert(code: string): Node | undefined {
-  const [root, symbolTable] = parse(tokenize(code));
-  if (root !== undefined) {
-    return layout(root);
+  const [ast, symbolTable] = parse(tokenize(code));
+  if (ast !== undefined) {
+    const node = layout(ast);
+    node.calcOffset();
+    return node;
   }
   return undefined;
 }
