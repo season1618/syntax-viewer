@@ -65,15 +65,16 @@ function Canvas() {
         let y = height * node.depth;
         drawNode(x, y, node.label);
 
-        let num = node.childs.length;
         node.childs.forEach((child, index) => {
-          draw(child);
-
-          let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
+          let x1 = x + (index + 1) / (node.childs.length + 1) * 2 * r - r;
           let y1 = y + r;
           let x2 = width * child.offset;
           let y2 = height * child.depth - r;
           drawArrow(x1, y1, x2, y2);
+        });
+
+        node.belows.forEach((below) => {
+          draw(below);
         });
       }
 
