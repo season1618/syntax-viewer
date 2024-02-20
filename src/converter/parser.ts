@@ -9,14 +9,12 @@ export type Expr = Call | Prim | Var;
 class Call {
   kind: 'call';
   depth: number;
-  offset: number;
   label: string;
   args: Expr[];
 
   constructor(depth: number, label: string, args: Expr[]) {
     this.kind = 'call';
     this.depth = depth;
-    this.offset = -1;
     this.label = label;
     this.args = args;
   }
@@ -31,34 +29,16 @@ class Call {
       child.updateDepth(depth + 1);
     }
   }
-
-  getOffset(): number {
-    return this.offset;
-  }
-
-  setOffset() {
-    for (const child of this.args) {
-      child.setOffset();
-    }
-    if (this.args.length === 0) {
-      this.offset = offsetTable.calcOffset(this.depth);
-    } else {
-      let avgOffset = this.args.map((arg) => arg.getOffset()).reduce((sum, val) => sum + val, 0) / this.args.length;
-      this.offset = offsetTable.calcOffset(this.depth, avgOffset);
-    }
-  }
 }
 
 class Prim {
   kind: 'prim';
   depth: number;
-  offset: number;
   label: string;
 
   constructor(depth: number, label: string) {
     this.kind = 'prim';
     this.depth = depth;
-    this.offset = -1;
     this.label = label;
   }
 
@@ -68,14 +48,6 @@ class Prim {
 
   updateDepth(depth: number) {
     this.depth = Math.max(this.depth, depth);
-  }
-
-  getOffset(): number {
-    return this.offset;
-  }
-
-  setOffset() {
-    this.offset = offsetTable.calcOffset(this.depth);
   }
 }
 
@@ -97,19 +69,6 @@ class Var {
 
   updateDepth(depth: number) {
     symbolTable.updateDepth(this.label, depth);
-  }
-
-  getOffset(): number {
-    let symbol = symbolTable.table[this.id];
-    return symbol.offset;
-  }
-
-  setOffset() {
-    let symbol = symbolTable.table[this.id];
-    if (symbol.offset === -1) {
-      symbol.value.setOffset();
-      symbol.offset = offsetTable.calcOffset(symbol.depth, symbol.value.getOffset());
-    }
   }
 
   getValue(): Expr {
@@ -155,15 +114,6 @@ class SymbolTable {
       }
     }
   }
-
-  setOffset() {
-    for (const symbol of this.table) {
-      if (symbol.offset === -1) {
-        symbol.value.setOffset();
-        symbol.offset = offsetTable.calcOffset(symbol.depth, symbol.value.getOffset());
-      }
-    }
-  }
 }
 
 class OffsetTable {
@@ -184,7 +134,7 @@ class OffsetTable {
   }
 }
 
-function parse(tokenList: Token[]): Ast | undefined {
+function parse(tokenList: Token[]): [Ast | undefined, SymbolTable] {
   let root;
   symbolTable = new SymbolTable();
   offsetTable = new OffsetTable();
@@ -209,7 +159,7 @@ function parse(tokenList: Token[]): Ast | undefined {
     break;
   }
   
-  return root;
+  return [root, symbolTable];
 
   function parse_ident(): string | undefined {
     if (i < tokenList.length) {

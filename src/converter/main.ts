@@ -1,13 +1,13 @@
 import { tokenize } from './lexer';
 import { Ast, parse } from './parser';
+import { Node, layout } from './layout';
 
-function convert(code: string): Ast | undefined {
-  const root = parse(tokenize(code));
+function convert(code: string): Node | undefined {
+  const [root, symbolTable] = parse(tokenize(code));
   if (root !== undefined) {
-    root.setOffset();
+    return layout(root);
   }
-  // symbolTable.setOffset();
-  return root;
+  return undefined;
 }
 
 export { convert };

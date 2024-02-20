@@ -1,14 +1,14 @@
 import './Canvas.css';
-import { Expr } from '../converter/parser';
+import { Node } from '../converter/layout';
 import { useState, useEffect, useContext } from 'react';
-import { AstContext } from '../App';
+import { NodeContext } from '../App';
 
 function Canvas() {
   const [mousePressed, setMousePressed] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
-  const [ast, setAST] = useContext(AstContext);
+  const [node, setNode] = useContext(NodeContext);
 
   function updateMousePos(x: number, y: number) {
     if (mousePressed) {
@@ -56,30 +56,25 @@ function Canvas() {
       const r = 24; // radius of node
       const s = 3; // scale of triangle
       
-      if (ast !== undefined){
-        draw(ast);
+      if (node !== undefined){
+        draw(node);
       }
 
-      function draw(expr: Expr) {
-        let x = width * expr.getOffset();
-        let y = height * expr.getDepth();
-        drawNode(x, y, expr.label);
-        if (expr.kind == 'call') {
-          let x = width * expr.getOffset();
-          let y = height * expr.getDepth();
-          drawNode(x, y, expr.label);
+      function draw(node: Node) {
+        let x = width * node.offset;
+        let y = height * node.depth;
+        drawNode(x, y, node.label);
 
-          let num = expr.args.length;
-          expr.args.forEach((child, index) => {
-            draw(child);
+        let num = node.childs.length;
+        node.childs.forEach((child, index) => {
+          draw(child);
 
-            let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
-            let y1 = y + r;
-            let x2 = width * child.getOffset();
-            let y2 = height * child.getDepth() - r;
-            drawArrow(x1, y1, x2, y2);
-          });
-        }
+          let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
+          let y1 = y + r;
+          let x2 = width * child.offset;
+          let y2 = height * child.depth - r;
+          drawArrow(x1, y1, x2, y2);
+        });
       }
 
       function drawNode(x: number, y: number, label: string) {
@@ -102,7 +97,7 @@ function Canvas() {
         context.stroke();
       }
     },
-    [origin, logScale, ast]
+    [origin, logScale, node]
   );
 
   return (

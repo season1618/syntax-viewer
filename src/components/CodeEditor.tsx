@@ -1,12 +1,12 @@
 import './CodeEditor.css';
 import { useState, useEffect, useContext } from 'react';
-import { AstContext } from '../App';
+import { NodeContext } from '../App';
 import { convert } from '../converter/main';
 
 function CodeEditor() {
   const [code, setCode] = useState('(define x 0)\n(+ (* x x) (* x 2) 1)');
   const [cursorPos, setCursorPos] = useState(-1);
-  const [ast, setAST] = useContext(AstContext);
+  const [node, setNode] = useContext(NodeContext);
   const indent = 4;
   let target: HTMLTextAreaElement;
 
@@ -26,9 +26,9 @@ function CodeEditor() {
 
   useEffect(
     () => {
-      const nextAST = convert(code);
-      if (nextAST !== undefined) {
-        setAST(nextAST);
+      const nextNode = convert(code);
+      if (nextNode !== undefined) {
+        setNode(nextNode);
       }
     },
     [code]
