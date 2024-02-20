@@ -208,11 +208,6 @@ function parse(tokenList: Token[]): AST {
     root = parse_expr(0);
     break;
   }
-
-  if (root !== undefined) {
-    root.setOffset();
-  }
-  symbolTable.setOffset();
   
   return [root, symbolTable];
 
