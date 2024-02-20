@@ -1,23 +1,5 @@
 import { Ast, SymbolTable } from './parser'
 
-class OffsetTable {
-  table: { [depth: number]: Set<number> };
-
-  constructor() {
-    this.table = {};
-  }
-
-  calcOffset(depth: number, offset: number = -1): number {
-    if (!(depth in this.table)) {
-      this.table[depth] = new Set();
-    }
-    let maxOffset = Math.max(-1, ...this.table[depth]);
-    let finOffset = Math.max(maxOffset + 1, offset);
-    this.table[depth].add(finOffset);
-    return finOffset;
-  }
-}
-
 const inf = 1e9;
 
 function minArray(a: number[], b: number[]): number[] {
@@ -43,18 +25,25 @@ function maxArray(a: number[], b: number[]): number[] {
 }
 
 class Node {
+  label: string;
   offset: number;
   depth: number;
-  label: string;
   childs: Node[];
   belows: Node[];
 
-  constructor(offset: number, depth: number, label: string, childs: Node[], belows: Node[]) {
-    this.offset = offset;
-    this.depth = depth;
-    this.label = label;
-    this.childs = childs;
-    this.belows = belows;
+  constructor(ast: Ast) {
+    this.label = ast.label;
+    this.offset = 0;
+    this.depth = ast.getDepth();
+    this.childs = [];
+    this.belows = [];
+    if (ast.kind == 'call') {
+      for (const arg of ast.args) {
+        const node = new Node(arg);
+        this.childs.push(node);
+        if (this.depth + 1 == node.depth) this.belows.push(node);
+      }
+    }
   }
 
   calcOffset() {
@@ -107,21 +96,4 @@ class Node {
   }
 }
 
-function layout(ast: Ast, offsetTable: OffsetTable = new OffsetTable()): Node {
-  let label = ast.label;
-  let offset = 0;
-  let depth = ast.getDepth();
-  let childs: Node[] = [];
-  let belows: Node[] = [];
-  if (ast.kind == 'call') {
-    for (const arg of ast.args) {
-      const node = layout(arg, offsetTable);
-      childs.push(node);
-      if (depth + 1 == node.depth) belows.push(node);
-    }
-  }
-  
-  return new Node(offset, depth, label, childs, belows);
-}
-
-export { Node, layout };
+export { Node };

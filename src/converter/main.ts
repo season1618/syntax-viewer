@@ -1,11 +1,11 @@
 import { tokenize } from './lexer';
 import { Ast, parse } from './parser';
-import { Node, layout } from './layout';
+import { Node } from './layout';
 
 function convert(code: string): Node | undefined {
   const [ast, symbolTable] = parse(tokenize(code));
   if (ast !== undefined) {
-    const node = layout(ast);
+    const node = new Node(ast);
     node.calcOffset();
     return node;
   }
