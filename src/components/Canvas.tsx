@@ -55,52 +55,30 @@ function Canvas() {
       const height = 120;
       const r = 24; // radius of node
       const s = 3; // scale of triangle
-
-      const [root, symbolTable] = ast;
-
-      for (const symbol of symbolTable.table) {
-        let x = width * symbol.offset;
-        let y = height * symbol.depth;
-        drawNode(x, y, symbol.name);
-
-        draw(symbol.value);
-
-        let x1 = x;
-        let y1 = y + r;
-        let x2 = width * symbol.value.getOffset();
-        let y2 = height * symbol.value.getDepth() - r;
-        drawArrow(x1, y1, x2, y2);
-      }
       
-      if (root !== undefined){
-        draw(root);
+      if (ast !== undefined){
+        draw(ast);
       }
 
       function draw(expr: Expr) {
-        switch (expr.kind) {
-          case 'prim':{
-            let x = width * expr.getOffset();
-            let y = height * expr.getDepth();
-            drawNode(x, y, expr.label);
-            break;
-          }
-          case 'call':{
-            let x = width * expr.getOffset();
-            let y = height * expr.getDepth();
-            drawNode(x, y, expr.label);
+        let x = width * expr.getOffset();
+        let y = height * expr.getDepth();
+        drawNode(x, y, expr.label);
+        if (expr.kind == 'call') {
+          let x = width * expr.getOffset();
+          let y = height * expr.getDepth();
+          drawNode(x, y, expr.label);
 
-            let num = expr.args.length;
-            expr.args.forEach((child, index) => {
-              draw(child);
+          let num = expr.args.length;
+          expr.args.forEach((child, index) => {
+            draw(child);
 
-              let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
-              let y1 = y + r;
-              let x2 = width * child.getOffset();
-              let y2 = height * child.getDepth() - r;
-              drawArrow(x1, y1, x2, y2);
-            });
-            break;
-          }
+            let x1 = x + (index + 1) / (num + 1) * 2 * r - r;
+            let y1 = y + r;
+            let x2 = width * child.getOffset();
+            let y2 = height * child.getDepth() - r;
+            drawArrow(x1, y1, x2, y2);
+          });
         }
       }
 

@@ -3,7 +3,7 @@ import { Token } from './lexer';
 let symbolTable: SymbolTable;
 let offsetTable: OffsetTable;
 
-export type AST = [Expr | undefined, SymbolTable];
+export type Ast = Expr;
 export type Expr = Call | Prim | Var;
 
 class Call {
@@ -184,7 +184,7 @@ class OffsetTable {
   }
 }
 
-function parse(tokenList: Token[]): AST {
+function parse(tokenList: Token[]): Ast | undefined {
   let root;
   symbolTable = new SymbolTable();
   offsetTable = new OffsetTable();
@@ -209,7 +209,7 @@ function parse(tokenList: Token[]): AST {
     break;
   }
   
-  return [root, symbolTable];
+  return root;
 
   function parse_ident(): string | undefined {
     if (i < tokenList.length) {

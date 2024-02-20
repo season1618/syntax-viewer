@@ -2,13 +2,13 @@ import './App.css';
 import { useState, createContext } from 'react';
 import CodeEditor from './components/CodeEditor';
 import Canvas from './components/Canvas';
-import { AST, SymbolTable } from './converter/parser';
+import { Ast, SymbolTable } from './converter/parser';
 
-const initAST: AST = [undefined, new SymbolTable()];
-export const AstContext = createContext<[AST, (ast: AST) => void]>([initAST, (ast: AST) => {}])
+const initAST: Ast | undefined = undefined;
+export const AstContext = createContext<[Ast | undefined, (ast: Ast | undefined) => void]>([initAST, (ast: Ast | undefined) => {}])
 
 function App() {
-  const [ast, setAST] = useState<AST>(initAST);
+  const [ast, setAST] = useState<Ast | undefined>(initAST);
 
   return (
     <div id="app">
