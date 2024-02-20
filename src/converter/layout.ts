@@ -1,6 +1,4 @@
-import { Ast, SymbolTable } from './parser'
-
-const inf = 1e9;
+import { Ast } from './parser'
 
 function minArray(a: number[], b: number[]): number[] {
   if (a.length > b.length) {

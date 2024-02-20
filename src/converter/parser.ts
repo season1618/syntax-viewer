@@ -1,7 +1,6 @@
 import { Token } from './lexer';
 
 let symbolTable: SymbolTable;
-let offsetTable: OffsetTable;
 
 export type Ast = Expr;
 export type Expr = Call | Prim | Var;
@@ -116,28 +115,9 @@ class SymbolTable {
   }
 }
 
-class OffsetTable {
-  table: { [depth: number]: Set<number> };
-
-  constructor() {
-    this.table = {};
-  }
-
-  calcOffset(depth: number, offset: number = -1): number {
-    if (!(depth in this.table)) {
-      this.table[depth] = new Set();
-    }
-    let maxOffset = Math.max(-1, ...this.table[depth]);
-    let finOffset = Math.max(maxOffset + 1, offset);
-    this.table[depth].add(finOffset);
-    return finOffset;
-  }
-}
-
-function parse(tokenList: Token[]): [Ast | undefined, SymbolTable] {
+function parse(tokenList: Token[]): Ast | undefined {
   let root;
   symbolTable = new SymbolTable();
-  offsetTable = new OffsetTable();
   let i = 0;
   while (i < tokenList.length) {
     if (expect('(')) {
@@ -159,7 +139,7 @@ function parse(tokenList: Token[]): [Ast | undefined, SymbolTable] {
     break;
   }
   
-  return [root, symbolTable];
+  return root;
 
   function parse_ident(): string | undefined {
     if (i < tokenList.length) {
