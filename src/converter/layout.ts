@@ -61,15 +61,17 @@ class Node {
     for (const below of this.belows) {
       below.calcOffset();
     }
+
+    let accContRight: number[] = [];
     for (let i = 1; i < this.belows.length; i++) {
       let treeLeft = this.belows[i-1];
       let treeRight = this.belows[i];
 
       let diff = [];
-      let contRight = treeLeft.contourRight();
+      accContRight = maxArray(accContRight, treeLeft.contourRight());
       let contLeft = treeRight.contourLeft();
-      for (let i = 0; i < Math.min(contLeft.length, contRight.length); i++) {
-        diff.push(1 + contRight[i] - contLeft[i]);
+      for (let i = 0; i < Math.min(accContRight.length, contLeft.length); i++) {
+        diff.push(1 + accContRight[i] - contLeft[i]);
       }
       
       let shift = diff.reduce((max, v) => Math.max(max, v), 0);
