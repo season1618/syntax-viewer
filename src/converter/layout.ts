@@ -22,6 +22,27 @@ function maxArray(a: number[], b: number[]): number[] {
   return res;
 }
 
+class SymbolTable {
+  table: { name: string; value: Node; }[];
+
+  constructor() {
+    this.table = [];
+  }
+
+  push(name: string, value: Node) {
+    this.table.push({ name, value });
+  }
+
+  find(name: string): Node | undefined {
+    for (const symbol of this.table) {
+      if (symbol.name === name) {
+        return symbol.value;
+      }
+    }
+    return undefined;
+  }
+}
+
 class Node {
   label: string;
   offset: number;
@@ -29,17 +50,38 @@ class Node {
   childs: Node[];
   belows: Node[];
 
-  constructor(ast: Ast) {
-    this.label = ast.label;
-    this.offset = 0;
-    this.depth = ast.getDepth();
-    this.childs = [];
-    this.belows = [];
-    if (ast.kind == 'call') {
-      for (const arg of ast.args) {
-        const node = new Node(arg);
-        this.childs.push(node);
-        if (this.depth + 1 == node.depth) this.belows.push(node);
+  constructor(label: string, offset: number, depth: number, childs: Node[], belows: Node[]) {
+    this.label = label;
+    this.offset = offset;
+    this.depth = depth;
+    this.childs = childs;
+    this.belows = belows;
+  }
+
+  static build(ast: Ast, symbolTable: SymbolTable = new SymbolTable()): Node {
+    switch (ast.kind) {
+      case 'call': {
+        let depth = ast.getDepth();
+        let childs = [];
+        let belows = [];
+        for (const arg of ast.args) {
+          const node = Node.build(arg, symbolTable);
+          childs.push(node);
+          if (depth + 1 == node.depth) belows.push(node);
+        }
+        return new Node(ast.label, 0, depth, childs, belows);
+      }
+      case 'prim': {
+        return new Node(ast.label, 0, ast.getDepth(), [], []);
+      }
+      case 'var': {
+        let node = symbolTable.find(ast.label);
+        if (node == undefined) {
+          let child = Node.build(ast.getValue(), symbolTable);
+          node = new Node(ast.label, 0, ast.getDepth(), [child], [child]);
+          symbolTable.push(ast.label, node);
+        }
+        return node;
       }
     }
   }
