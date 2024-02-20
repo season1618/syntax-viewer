@@ -49,7 +49,7 @@ class Call {
   }
 }
 
-export class Prim {
+class Prim {
   kind: 'prim';
   depth: number;
   offset: number;
