@@ -23,14 +23,14 @@ function maxArray(a: number[], b: number[]): number[] {
 }
 
 class SymbolTable {
-  table: { name: string; value: Node; havePar: boolean; }[];
+  table: { name: string; value: Node; }[];
 
   constructor() {
     this.table = [];
   }
 
   push(name: string, value: Node) {
-    this.table.push({ name, value, havePar: false });
+    this.table.push({ name, value });
   }
 
   find(name: string): Node | undefined {
@@ -40,23 +40,6 @@ class SymbolTable {
       }
     }
     return undefined;
-  }
-
-  haveParent(name: string): boolean {
-    for (const symbol of this.table) {
-      if (symbol.name === name) {
-        return symbol.havePar;
-      }
-    }
-    return false;
-  }
-
-  setParent(name: string) {
-    for (const symbol of this.table) {
-      if (symbol.name === name) {
-        symbol.havePar = true;
-      }
-    }
   }
 }
 
