@@ -75,7 +75,7 @@ class Node {
       }
       case 'var': {
         let node = symbolTable.find(ast.label);
-        if (node == undefined) {
+        if (node === undefined) {
           let child = Node.build(ast.getValue(), symbolTable);
           node = new Node(ast.label, [child]);
           symbolTable.push(ast.label, node);
@@ -94,7 +94,7 @@ class Node {
 
   calcBelows() {
     for (const node of this.childs) {
-      if (this.depth + 1 == node.depth && !node.havePar) {
+      if (this.depth + 1 === node.depth && !node.havePar) {
         node.havePar = true;
         this.belows.push(node);
         node.calcBelows();
@@ -123,7 +123,7 @@ class Node {
       treeRight.move(shift);
     }
 
-    if (this.belows.length == 0) {
+    if (this.belows.length === 0) {
       this.offset = 0;
     } else {
       this.offset = this.belows.map(below => below.offset).reduce((sum, v) => sum + v, 0) / this.belows.length;
