@@ -1,3 +1,4 @@
+import { assert } from 'console';
 import { Ast } from './parser'
 
 function minArray(a: number[], b: number[]): number[] {
@@ -66,13 +67,15 @@ class Node {
   depth: number;
   childs: Node[];
   belows: Node[];
+  havePar: boolean;
 
-  constructor(label: string, offset: number, depth: number, childs: Node[], belows: Node[]) {
+  constructor(label: string, depth: number, childs: Node[]) {
     this.label = label;
-    this.offset = offset;
+    this.offset = 0;
     this.depth = depth;
     this.childs = childs;
-    this.belows = belows;
+    this.belows = [];
+    this.havePar = false;
   }
 
   static build(ast: Ast, symbolTable: SymbolTable = new SymbolTable()): Node {
@@ -80,25 +83,20 @@ class Node {
       case 'call': {
         let depth = ast.getDepth();
         let childs = [];
-        let belows = [];
         for (const arg of ast.args) {
           const node = Node.build(arg, symbolTable);
           childs.push(node);
-          if (depth + 1 == node.depth && !symbolTable.haveParent(node.label)) {
-            symbolTable.setParent(node.label);
-            belows.push(node);
-          }
         }
-        return new Node(ast.label, 0, depth, childs, belows);
+        return new Node(ast.label, depth, childs);
       }
       case 'prim': {
-        return new Node(ast.label, 0, ast.getDepth(), [], []);
+        return new Node(ast.label, ast.getDepth(), []);
       }
       case 'var': {
         let node = symbolTable.find(ast.label);
         if (node == undefined) {
           let child = Node.build(ast.getValue(), symbolTable);
-          node = new Node(ast.label, 0, ast.getDepth(), [child], [child]);
+          node = new Node(ast.label, ast.getDepth(), [child]);
           symbolTable.push(ast.label, node);
         }
         return node;
@@ -106,6 +104,16 @@ class Node {
     }
   }
 
+  calcBelows() {
+    for (const node of this.childs) {
+      if (this.depth + 1 == node.depth && !node.havePar) {
+        node.havePar = true;
+        this.belows.push(node);
+        node.calcBelows();
+      }
+    }
+  }
+  
   calcOffset() {
     for (const below of this.belows) {
       below.calcOffset();
