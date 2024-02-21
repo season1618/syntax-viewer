@@ -76,7 +76,7 @@ class Node {
       case 'var': {
         let node = symbolTable.find(ast.label);
         if (node === undefined) {
-          let child = Node.build(ast.getValue(), symbolTable);
+          let child = Node.build(ast.value, symbolTable);
           node = new Node(ast.label, [child]);
           symbolTable.push(ast.label, node);
         }

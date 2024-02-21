@@ -30,28 +30,24 @@ class Prim {
 class Var {
   kind: 'var';
   label: string;
-  id: number;
+  value: Expr;
 
-  constructor(label: string) {
+  constructor(label: string, value: Expr) {
     this.kind = 'var';
     this.label = label;
-    this.id = symbolTable.getId(label);
-  }
-
-  getValue(): Expr {
-    return symbolTable.table[this.id].value;
+    this.value = value;
   }
 }
 
 class SymbolTable {
-  table: { name: string; offset: number; value: Expr; }[];
+  table: { name: string; value: Expr; }[];
 
   constructor() {
     this.table = [];
   }
 
   push(name: string, value: Expr) {
-    this.table.push({ name, offset: -1, value });
+    this.table.push({ name, value });
   }
 
   find(name: string): Expr | undefined {
@@ -61,16 +57,6 @@ class SymbolTable {
       }
     }
     return undefined;
-  }
-
-  getId(name: string): number {
-    for (let index = 0; index < this.table.length; index++) {
-      let symbol = this.table[index];
-      if (symbol.name === name) {
-        return index;
-      }
-    }
-    return -1;
   }
 }
 
@@ -142,7 +128,7 @@ function parse(tokenList: Token[]): Ast | undefined {
         const symbol = symbolTable.find(token.ident);
         if (symbol === undefined) return new Prim(token.ident);
         else {
-          return new Var(token.ident);
+          return new Var(token.ident, symbol);
         }
     }
   }
