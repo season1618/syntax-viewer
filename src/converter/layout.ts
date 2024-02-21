@@ -1,4 +1,3 @@
-import { assert } from 'console';
 import { Ast } from './parser'
 
 function minArray(a: number[], b: number[]): number[] {
@@ -69,10 +68,10 @@ class Node {
   belows: Node[];
   havePar: boolean;
 
-  constructor(label: string, depth: number, childs: Node[]) {
+  constructor(label: string, childs: Node[]) {
     this.label = label;
     this.offset = 0;
-    this.depth = depth;
+    this.depth = 0;
     this.childs = childs;
     this.belows = [];
     this.havePar = false;
@@ -81,26 +80,32 @@ class Node {
   static build(ast: Ast, symbolTable: SymbolTable = new SymbolTable()): Node {
     switch (ast.kind) {
       case 'call': {
-        let depth = ast.getDepth();
         let childs = [];
         for (const arg of ast.args) {
           const node = Node.build(arg, symbolTable);
           childs.push(node);
         }
-        return new Node(ast.label, depth, childs);
+        return new Node(ast.label, childs);
       }
       case 'prim': {
-        return new Node(ast.label, ast.getDepth(), []);
+        return new Node(ast.label, []);
       }
       case 'var': {
         let node = symbolTable.find(ast.label);
         if (node == undefined) {
           let child = Node.build(ast.getValue(), symbolTable);
-          node = new Node(ast.label, ast.getDepth(), [child]);
+          node = new Node(ast.label, [child]);
           symbolTable.push(ast.label, node);
         }
         return node;
       }
+    }
+  }
+
+  calcDepth(depth: number = 0) {
+    this.depth = Math.max(this.depth, depth);
+    for (const child of this.childs) {
+      child.calcDepth(depth + 1);
     }
   }
 
@@ -113,7 +118,7 @@ class Node {
       }
     }
   }
-  
+
   calcOffset() {
     for (const below of this.belows) {
       below.calcOffset();
