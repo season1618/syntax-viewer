@@ -49,6 +49,8 @@ class Node {
   depth: number;
   childs: Node[];
   belows: Node[];
+
+  visited: boolean;
   havePar: boolean;
 
   constructor(label: string, childs: Node[]) {
@@ -57,6 +59,8 @@ class Node {
     this.depth = 0;
     this.childs = childs;
     this.belows = [];
+
+    this.visited = false;
     this.havePar = false;
   }
 
@@ -85,11 +89,24 @@ class Node {
     }
   }
 
-  calcDepth(depth: number = 0) {
-    this.depth = Math.max(this.depth, depth);
-    for (const child of this.childs) {
-      child.calcDepth(depth + 1);
+  calcDepth() {
+    const torder = this.tsortReverse().reverse();
+    for (const node of torder) {
+      for (const child of node.childs) {
+        child.depth = Math.max(child.depth, node.depth + 1);
+      }
     }
+  }
+
+  tsortReverse(array: Node[] = []): Node[] {
+    if (this.visited) return array;
+    this.visited = true;
+
+    for (const child of this.childs) {
+      child.tsortReverse(array);
+    }
+    array.push(this);
+    return array;
   }
 
   calcBelows() {
