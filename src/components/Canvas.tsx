@@ -57,24 +57,24 @@ function Canvas() {
       const s = 3; // scale of triangle
       
       if (node !== undefined){
-        draw(node);
+        draw(node, canvas.width / 2, canvas.height / 10);
       }
 
-      function draw(node: Node) {
-        let x = width * node.offset;
-        let y = height * node.depth;
+      function draw(node: Node, originX: number, originY: number) {
+        let x = originX + width * node.offset;
+        let y = originY + height * node.depth;
         drawNode(x, y, node.label);
 
         node.childs.forEach((child, index) => {
           let x1 = x + (index + 1) / (node.childs.length + 1) * 2 * r - r;
           let y1 = y + r;
-          let x2 = width * child.offset;
-          let y2 = height * child.depth - r;
+          let x2 = originX + width * child.offset;
+          let y2 = originY + height * child.depth - r;
           drawArrow(x1, y1, x2, y2);
         });
 
         node.belows.forEach((below) => {
-          draw(below);
+          draw(below, originX, originY);
         });
       }
 

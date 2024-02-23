@@ -9,6 +9,7 @@ function convert(code: string): Node | undefined {
     node.calcDepth();
     node.calcBelows();
     node.calcOffset();
+    node.calcAbsolute();
     return node;
   }
   return undefined;
