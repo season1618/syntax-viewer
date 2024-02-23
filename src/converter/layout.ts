@@ -117,28 +117,28 @@ class Node {
       below.calcOffset();
     }
 
-    let rightContour: number[] = [];
-    let leftContour: number[];
+    let leftRC: number[] = [];
+    let rightLC: number[];
     for (let i = 1; i < this.belows.length; i++) {
       let leftTree = this.belows[i-1];
       let rightTree = this.belows[i];
 
       // get contour
-      rightContour = maxArray(rightContour, leftTree.rightContour());
-      leftContour = rightTree.leftContour();
+      leftRC = maxArray(leftRC, leftTree.rightContour());
+      rightLC = rightTree.leftContour();
 
       // set thread
-      if (rightContour.length < leftContour.length) {
+      if (leftRC.length < rightLC.length) {
         this.setLeftThread(this.belows[0], this.belows[i]);
       }
-      if (rightContour.length > leftContour.length) {
+      if (leftRC.length > rightLC.length) {
         this.setRightThread(this.belows[i-1], this.belows[i]);
       }
 
       // get space
       let space = 0;
-      for (let j = 0; j < Math.min(rightContour.length, leftContour.length); j++) {
-        space = Math.max(space, 1 + rightContour[j] - leftContour[j]);
+      for (let j = 0; j < Math.min(leftRC.length, rightLC.length); j++) {
+        space = Math.max(space, 1 + leftRC[j] - rightLC[j]);
       }
 
       this.belows[i].offset += space;
