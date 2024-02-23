@@ -5,12 +5,12 @@ import { Node } from './layout';
 function convert(code: string): Node | undefined {
   const ast = parse(tokenize(code));
   if (ast !== undefined) {
-    const node = Node.build(ast);
-    node.calcDepth();
-    node.calcBelows();
-    node.calcOffset();
-    node.calcAbsolute();
-    return node;
+    const tree = Node.build(ast);
+    tree.calcDepth();
+    tree.calcBelows();
+    tree.calcOffset();
+    tree.calcAbsolute();
+    return tree;
   }
   return undefined;
 }

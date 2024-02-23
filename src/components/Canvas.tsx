@@ -8,7 +8,7 @@ function Canvas() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
-  const [node, setNode] = useContext(NodeContext);
+  const [tree, setTree] = useContext(NodeContext);
 
   function updateMousePos(x: number, y: number) {
     if (mousePressed) {
@@ -56,8 +56,8 @@ function Canvas() {
       const r = 24; // radius of node
       const s = 3; // scale of triangle
       
-      if (node !== undefined){
-        draw(node, canvas.width / 2, canvas.height / 10);
+      if (tree !== undefined){
+        draw(tree, canvas.width / 2, canvas.height / 10);
       }
 
       function draw(node: Node, originX: number, originY: number) {
@@ -98,7 +98,7 @@ function Canvas() {
         context.stroke();
       }
     },
-    [origin, logScale, node]
+    [origin, logScale, tree]
   );
 
   return (
