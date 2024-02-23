@@ -1,16 +1,5 @@
 import { Ast } from './parser'
 
-function minArray(a: number[], b: number[]): number[] {
-  if (a.length > b.length) {
-    [a, b] = [b, a];
-  }
-
-  let res = [];
-  for (let i = 0; i < a.length; i++) res.push(Math.min(a[i], b[i]));
-  for (let i = a.length; i < b.length; i++) res.push(b[i]);
-  return res;
-}
-
 function maxArray(a: number[], b: number[]): number[] {
   if (a.length > b.length) {
     [a, b] = [b, a];
@@ -49,6 +38,7 @@ class Node {
   depth: number;
   childs: Node[];
   belows: Node[];
+  thread: Node | null;
 
   visited: boolean;
   havePar: boolean;
@@ -59,6 +49,7 @@ class Node {
     this.depth = 0;
     this.childs = childs;
     this.belows = [];
+    this.thread = null;
 
     this.visited = false;
     this.havePar = false;
@@ -124,20 +115,30 @@ class Node {
       below.calcOffset();
     }
 
-    let accContRight: number[] = [];
+    let rightContour: number[] = [];
+    let leftContour: number[];
     for (let i = 1; i < this.belows.length; i++) {
-      let treeLeft = this.belows[i-1];
-      let treeRight = this.belows[i];
+      let leftTree = this.belows[i-1];
+      let rightTree = this.belows[i];
+
+      // get contour
+      rightContour = maxArray(rightContour, leftTree.rightContour());
+      leftContour = rightTree.leftContour();
+
+      // set thread
+      if (rightContour.length < leftContour.length) {
+        this.setLeftThread(this.belows[0], this.belows[i]);
+      }
+      if (rightContour.length > leftContour.length) {
+        this.setRightThread(this.belows[i-1], this.belows[i]);
+      }
 
       let diff = [];
-      accContRight = maxArray(accContRight, treeLeft.contourRight());
-      let contLeft = treeRight.contourLeft();
-      for (let i = 0; i < Math.min(accContRight.length, contLeft.length); i++) {
-        diff.push(1 + accContRight[i] - contLeft[i]);
+      for (let i = 0; i < Math.min(rightContour.length, leftContour.length); i++) {
+        diff.push(1 + rightContour[i] - leftContour[i]);
       }
-      
       let shift = diff.reduce((max, v) => Math.max(max, v), 0);
-      treeRight.move(shift);
+      rightTree.move(shift);
     }
 
     if (this.belows.length === 0) {
@@ -147,18 +148,48 @@ class Node {
     }
   }
 
-  contourLeft(): number[] {
-    const contourBelow = this.belows
-      .map(below => below.contourLeft())
-      .reduce(minArray, [])
-    return [this.offset, ...contourBelow];
+  leftContour(): number[] {
+    const left = this.left();
+    if (left === null) return [this.offset];
+    else return [this.offset, ...left.leftContour()];
   }
 
-  contourRight(): number[] {
-    const contourBelow = this.belows
-      .map(below => below.contourRight())
-      .reduce(maxArray, [])
-    return [this.offset, ...contourBelow];
+  rightContour(): number[] {
+    const right = this.right();
+    if (right === null) return [this.offset];
+    else return [this.offset, ...right.rightContour()];
+  }
+
+  setLeftThread(leftTree: Node, rightTree: Node) {
+    let left = leftTree.left();
+    let right = rightTree.left();
+    if (left === null || right === null) {
+      leftTree.thread = right;
+    } else {
+      this.setLeftThread(left, right);
+    }
+  }
+
+  setRightThread(leftTree: Node, rightTree: Node) {
+    let left = leftTree.right();
+    let right = rightTree.right();
+    if (left === null || right === null) {
+      rightTree.thread = left;
+    } else {
+      this.setRightThread(left, right);
+    }
+  }
+
+  left(): Node | null {
+    if (this.thread !== null) return this.thread;
+    if (this.belows.length !== 0) return this.belows[0];
+    return null;
+  }
+
+  right(): Node | null {
+    if (this.thread !== null) return this.thread;
+    if (this.belows.length !== 0) return this.belows[this.belows.length - 1];
+    return null;
   }
 
   move(shift: number) {
