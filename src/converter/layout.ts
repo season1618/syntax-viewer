@@ -127,24 +127,26 @@ class Node {
       leftRC = maxArray(leftRC, leftTree.rightContour());
       rightLC = rightTree.leftContour();
 
-      // set thread
+      // get shift
+      let shift = -Infinity;
+      for (let j = 0; j < Math.min(leftRC.length, rightLC.length); j++) {
+        shift = Math.max(shift, 1 + leftRC[j] - rightLC[j]);
+      }
+
+      // update offset, determine shift
+      this.belows[i].offset += shift;
+      this.belows[i].shift = shift;
+
+      // set thread, update shift of leaf node
       if (leftRC.length < rightLC.length) {
         this.setLeftThread(this.belows[0], this.belows[i]);
       }
       if (leftRC.length > rightLC.length) {
         this.setRightThread(this.belows[i-1], this.belows[i]);
       }
-
-      // get space
-      let space = 0;
-      for (let j = 0; j < Math.min(leftRC.length, rightLC.length); j++) {
-        space = Math.max(space, 1 + leftRC[j] - rightLC[j]);
-      }
-
-      this.belows[i].offset += space;
-      this.belows[i].shift = space;
     }
 
+    // determine offset
     if (this.belows.length === 0) this.offset = 0;
     else this.offset = this.belows.map(below => below.offset).reduce((sum, v) => sum + v, 0) / this.belows.length;
   }
@@ -164,19 +166,21 @@ class Node {
     else return [origin + this.offset, ...this.right()!.rightContour(origin + this.shift)];
   }
 
-  setLeftThread(leftTree: Node, rightTree: Node) {
+  setLeftThread(leftTree: Node, rightTree: Node, leftOrigin: number = 0, rightOrigin: number = 0) {
     if (leftTree.left() === null) {
       leftTree.thread = rightTree.left();
+      leftTree.shift = (rightOrigin + rightTree.shift) - leftOrigin;
     } else {
-      this.setLeftThread(leftTree.left()!, rightTree.left()!);
+      this.setLeftThread(leftTree.left()!, rightTree.left()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
     }
   }
 
-  setRightThread(leftTree: Node, rightTree: Node) {
+  setRightThread(leftTree: Node, rightTree: Node, leftOrigin: number = 0, rightOrigin: number = 0) {
     if (rightTree.right() === null) {
       rightTree.thread = leftTree.right();
+      rightTree.shift = (leftOrigin + leftTree.shift) - rightOrigin;
     } else {
-      this.setRightThread(leftTree.right()!, rightTree.right()!);
+      this.setRightThread(leftTree.right()!, rightTree.right()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
     }
   }
 
