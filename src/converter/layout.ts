@@ -151,9 +151,9 @@ class Node {
     else this.offset = this.belows.map(below => below.offset).reduce((sum, v) => sum + v, 0) / this.belows.length;
   }
 
-  calcAbsolute(origin: number = 0) {
-    this.belows.forEach(below => below.calcAbsolute(origin + this.shift));
+  calcAbsolute(origin: number = -this.offset) {
     this.offset += origin;
+    this.belows.forEach(below => below.calcAbsolute(origin + this.shift));
   }
 
   leftContour(origin: number = 0): number[] {
