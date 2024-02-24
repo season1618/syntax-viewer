@@ -34,6 +34,7 @@ class SymbolTable {
 
 class Node {
   label: string;
+  shift: number;
   offset: number;
   depth: number;
   childs: Node[];
@@ -45,6 +46,7 @@ class Node {
 
   constructor(label: string, childs: Node[]) {
     this.label = label;
+    this.shift = 0;
     this.offset = 0;
     this.depth = 0;
     this.childs = childs;
@@ -103,8 +105,8 @@ class Node {
   calcBelows() {
     for (const node of this.childs) {
       if (this.depth + 1 === node.depth && !node.havePar) {
-        node.havePar = true;
         this.belows.push(node);
+        node.havePar = true;
         node.calcBelows();
       }
     }
@@ -115,75 +117,70 @@ class Node {
       below.calcOffset();
     }
 
-    let rightContour: number[] = [];
-    let leftContour: number[];
-    let offsets = [0];
+    let leftRC: number[] = [];
+    let rightLC: number[];
     for (let i = 1; i < this.belows.length; i++) {
       let leftTree = this.belows[i-1];
       let rightTree = this.belows[i];
 
       // get contour
-      rightContour = maxArray(rightContour, leftTree.rightContour());
-      leftContour = rightTree.leftContour();
+      leftRC = maxArray(leftRC, leftTree.rightContour());
+      rightLC = rightTree.leftContour();
 
-      // set thread
-      if (rightContour.length < leftContour.length) {
+      // get shift
+      let shift = -Infinity;
+      for (let j = 0; j < Math.min(leftRC.length, rightLC.length); j++) {
+        shift = Math.max(shift, 1 + leftRC[j] - rightLC[j]);
+      }
+
+      // update offset, determine shift
+      this.belows[i].offset += shift;
+      this.belows[i].shift = shift;
+
+      // set thread, update shift of leaf node
+      if (leftRC.length < rightLC.length) {
         this.setLeftThread(this.belows[0], this.belows[i]);
       }
-      if (rightContour.length > leftContour.length) {
+      if (leftRC.length > rightLC.length) {
         this.setRightThread(this.belows[i-1], this.belows[i]);
       }
-
-      // get space
-      let space = 0;
-      for (let i = 0; i < Math.min(rightContour.length, leftContour.length); i++) {
-        space = Math.max(space, 1 + rightContour[i] - leftContour[i]);
-      }
-      offsets.push(offsets[offsets.length - 1] + space);
     }
 
-    if (this.belows.length > 0) {
-      let centerOffset = offsets.reduce((sum, v) => sum + v, 0) / offsets.length;
-      for (let i = 0; i < this.belows.length; i++) {
-        this.belows[i].offset = offsets[i] - centerOffset;
-      }
-    }
+    // determine offset
+    if (this.belows.length === 0) this.offset = 0;
+    else this.offset = this.belows.map(below => below.offset).reduce((sum, v) => sum + v, 0) / this.belows.length;
   }
 
-  calcAbsolute(origin: number = 0) {
-    this.belows.forEach(below => below.calcAbsolute(origin + this.offset));
+  calcAbsolute(origin: number = -this.offset) {
     this.offset += origin;
+    this.belows.forEach(below => below.calcAbsolute(origin + this.shift));
   }
 
   leftContour(origin: number = 0): number[] {
-    const left = this.left();
-    if (left === null) return [origin + this.offset];
-    else return [origin + this.offset, ...left.leftContour(origin + this.offset)];
+    if (this.left() === null) return [origin + this.offset];
+    else return [origin + this.offset, ...this.left()!.leftContour(origin + this.shift)];
   }
 
   rightContour(origin: number = 0): number[] {
-    const right = this.right();
-    if (right === null) return [origin + this.offset];
-    else return [origin + this.offset, ...right.rightContour(origin + this.offset)];
+    if (this.right() === null) return [origin + this.offset];
+    else return [origin + this.offset, ...this.right()!.rightContour(origin + this.shift)];
   }
 
-  setLeftThread(leftTree: Node, rightTree: Node) {
-    let left = leftTree.left();
-    let right = rightTree.left();
-    if (left === null || right === null) {
-      leftTree.thread = right;
+  setLeftThread(leftTree: Node, rightTree: Node, leftOrigin: number = 0, rightOrigin: number = 0) {
+    if (leftTree.left() === null) {
+      leftTree.thread = rightTree.left();
+      leftTree.shift = (rightOrigin + rightTree.shift) - leftOrigin;
     } else {
-      this.setLeftThread(left, right);
+      this.setLeftThread(leftTree.left()!, rightTree.left()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
     }
   }
 
-  setRightThread(leftTree: Node, rightTree: Node) {
-    let left = leftTree.right();
-    let right = rightTree.right();
-    if (left === null || right === null) {
-      rightTree.thread = left;
+  setRightThread(leftTree: Node, rightTree: Node, leftOrigin: number = 0, rightOrigin: number = 0) {
+    if (rightTree.right() === null) {
+      rightTree.thread = leftTree.right();
+      rightTree.shift = (leftOrigin + leftTree.shift) - rightOrigin;
     } else {
-      this.setRightThread(left, right);
+      this.setRightThread(leftTree.right()!, rightTree.right()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
     }
   }
 
