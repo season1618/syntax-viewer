@@ -171,7 +171,7 @@ class Node {
       leftTree.thread = rightTree.left();
       leftTree.shift = (rightOrigin + rightTree.shift) - leftOrigin;
     } else {
-      this.setLeftThread(leftTree.left()!, rightTree.left()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
+      this.setLeftThread(leftTree.left()!, rightTree.left()!, leftOrigin + leftTree.shift, rightOrigin + rightTree.shift);
     }
   }
 
@@ -180,7 +180,7 @@ class Node {
       rightTree.thread = leftTree.right();
       rightTree.shift = (leftOrigin + leftTree.shift) - rightOrigin;
     } else {
-      this.setRightThread(leftTree.right()!, rightTree.right()!, leftOrigin + leftTree.offset, rightOrigin + rightTree.offset);
+      this.setRightThread(leftTree.right()!, rightTree.right()!, leftOrigin + leftTree.shift, rightOrigin + rightTree.shift);
     }
   }
 
