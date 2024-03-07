@@ -1,11 +1,12 @@
 import './CodeEditor.css';
 import { useState, useEffect, useContext } from 'react';
-import { NodeContext } from '../App';
+import { BorderContext, NodeContext } from '../App';
 import { convert } from '../converter/main';
 
 function CodeEditor() {
   const [code, setCode] = useState('(define x 0)\n(+ (* x x) (* x 2) 1)');
   const [cursorPos, setCursorPos] = useState(-1);
+  const [borderX, setBorderX] = useContext(BorderContext);
   const [tree, setTree] = useContext(NodeContext);
   const indent = 4;
   let target: HTMLTextAreaElement;
@@ -63,6 +64,7 @@ function CodeEditor() {
   return (
     <div id="editor">
       <textarea
+        style={{width: borderX - 10}}
         value={code}
         onChange={
           (e) => {

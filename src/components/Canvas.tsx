@@ -1,7 +1,7 @@
 import './Canvas.css';
 import { Node } from '../converter/layout';
 import { useState, useEffect, useContext } from 'react';
-import { NodeContext } from '../App';
+import { BorderContext, NodeContext } from '../App';
 
 function Canvas() {
   const [mousePressed, setMousePressed] = useState(false);
@@ -9,6 +9,7 @@ function Canvas() {
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ height: 0, width: 0 });
+  const [borderX, setBorderX] = useContext(BorderContext);
   const [tree, setTree] = useContext(NodeContext);
 
   function updateMousePos(x: number, y: number) {
@@ -107,6 +108,7 @@ function Canvas() {
 
   return (
     <canvas
+      style={{width: window.innerWidth - borderX}}
       onMouseDown={(e) => setMousePressed(true)}
       onMouseUp={(e) => setMousePressed(false)}
       onMouseMove={

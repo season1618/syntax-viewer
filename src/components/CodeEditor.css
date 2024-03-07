@@ -1,15 +1,13 @@
 div#editor {
   height: 100%;
-  width: 50%;
 }
 
 textarea {
   box-sizing: border-box;
   height: 100%;
-  width: 98%;
   resize: none;
 
-  margin-left: 2%;
+  margin-left: 10px;
 
   border-top-style: none;
   border-bottom-style: none;
