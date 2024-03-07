@@ -103,7 +103,7 @@ function Canvas() {
         context.stroke();
       }
     },
-    [origin, logScale, canvasSize, tree]
+    [origin, logScale, canvasSize, borderX, tree]
   );
 
   return (
