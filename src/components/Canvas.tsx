@@ -8,6 +8,7 @@ function Canvas() {
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
+  const [canvasSize, setCanvasSize] = useState({ height: 0, width: 0 });
   const [tree, setTree] = useContext(NodeContext);
 
   function updateMousePos(x: number, y: number) {
@@ -30,13 +31,10 @@ function Canvas() {
   useEffect(
     () => {
       const canvas = document.querySelector('canvas') as HTMLCanvasElement;
-      canvas.width = canvas.clientWidth;
-      canvas.height = canvas.clientHeight;
 
-      const context = canvas.getContext('2d') as CanvasRenderingContext2D;
-      context.font = '20px Consolas';
-      context.textAlign = 'center';
-      context.textBaseline = 'middle';
+      window.addEventListener('resize', () => {
+        setCanvasSize({ width: canvas.clientWidth, height: canvas.clientHeight });
+      });
     },
     []
   );
@@ -44,7 +42,13 @@ function Canvas() {
   useEffect(
     () => {
       const canvas = document.querySelector('canvas') as HTMLCanvasElement;
+      canvas.width = canvas.clientWidth;
+      canvas.height = canvas.clientHeight;
+
       const context = canvas.getContext('2d') as CanvasRenderingContext2D;
+      context.font = '20px Consolas';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
       
       context.resetTransform();
       context.clearRect(0, 0, canvas.width, canvas.height);
@@ -98,7 +102,7 @@ function Canvas() {
         context.stroke();
       }
     },
-    [origin, logScale, tree]
+    [origin, logScale, canvasSize, tree]
   );
 
   return (
