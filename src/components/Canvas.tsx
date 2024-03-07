@@ -9,8 +9,8 @@ function Canvas() {
   const [origin, setOrigin] = useState({ x: 0, y: 0 });
   const [logScale, setLogScale] = useState(0);
   const [canvasSize, setCanvasSize] = useState({ height: 0, width: 0 });
-  const [borderX, setBorderX] = useContext(BorderContext);
-  const [tree, setTree] = useContext(NodeContext);
+  const borderX = useContext(BorderContext)[0];
+  const tree = useContext(NodeContext)[0];
 
   function updateMousePos(x: number, y: number) {
     if (mousePressed) {

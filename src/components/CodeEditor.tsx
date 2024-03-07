@@ -6,21 +6,15 @@ import { convert } from '../converter/main';
 function CodeEditor() {
   const [code, setCode] = useState('(define x 0)\n(+ (* x x) (* x 2) 1)');
   const [cursorPos, setCursorPos] = useState(-1);
-  const [borderX, setBorderX] = useContext(BorderContext);
-  const [tree, setTree] = useContext(NodeContext);
+  const borderX = useContext(BorderContext)[0];
+  const setTree = useContext(NodeContext)[1];
   const indent = 4;
-  let target: HTMLTextAreaElement;
 
   useEffect(
     () => {
-      target = document.querySelector('textarea') as HTMLTextAreaElement;
-    }
-  );
-
-  useEffect(
-    () => {
-      target.focus();
-      target.setSelectionRange(cursorPos, cursorPos);
+      const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+      textarea.focus();
+      textarea.setSelectionRange(cursorPos, cursorPos);
     },
     [cursorPos]
   )
@@ -32,7 +26,7 @@ function CodeEditor() {
         setTree(nextTree);
       }
     },
-    [code]
+    [code, setTree]
   )
 
   function format(pos: number, nextCode: string) {

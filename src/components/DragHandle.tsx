@@ -1,10 +1,10 @@
 import './DragHandle.css';
-import { useState, useContext } from 'react';
+import { useContext } from 'react';
 import { DragContext, BorderContext } from '../App';
 
 function DragHandle() {
-  const [dragged, setDragged] = useContext(DragContext);
-  const [borderX, setBorderX] = useContext(BorderContext);
+  const setDragged = useContext(DragContext)[1];
+  const borderX = useContext(BorderContext)[0];
 
   return (
     <div id="draghandle"
