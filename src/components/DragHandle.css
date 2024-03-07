@@ -3,8 +3,5 @@
     width: 5px;
     cursor: ew-resize;
 
-    background-color: blue;
-
     position: fixed;
-    left: 100px;
 }
